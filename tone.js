@@ -21,10 +21,7 @@ var sequenceDuration = 5;
 var durationSum = 0;
 var phaseElt = document.getElementById('phase');
 for(var i = 0; i < mags.length; i++) {
-  var note = maxFreq - ((maxFreq - minFreq)*((mags[i] - minMag)/(maxMag - minMag)));
-  console.log(mags[i], note);
   var startingPhase = startingPhases[i];
-  phaseElt.innerHTML = startingPhase;
 
   var duration;
   if (i==mags.length-1) {
@@ -34,9 +31,49 @@ for(var i = 0; i < mags.length; i++) {
     duration = startingPhases[i + 1] - startingPhase;
   }
   duration *= sequenceDuration;
-  console.log('duration:', duration)
 
+  var note = maxFreq - ((maxFreq - minFreq)*((mags[i] - minMag)/(maxMag - minMag)));
   synth.triggerAttackRelease(note, duration, durationSum);
+  Tone.Transport.schedule(function(time){
+    console.log('duration:', duration)
+    console.log('trigger', time);
+    phaseElt.innerHTML = time;
+  }, durationSum);
+ 
   durationSum += duration;
 }
 console.log("sum, ", durationSum)
+Tone.Transport.start()
+
+    
+var aladin = A.aladin('#aladin-lite-div', {target: '12.5116686 -17.607493', fov: 0.01});
+
+var source;
+
+aladin.on('objectClicked', function(object) {
+  source = object.data.Source;
+  var xhr = new XMLHttpRequest();
+  var query = 'SELECT g_transit_time,g_transit_mag FROM "I/345/transits" where source_id=' + source;
+  var url = 'http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync?'
+  url += '&request=doQuery&lang=adql&format=json&phase=run';
+  url += '&query=' + encodeURIComponent(query);
+
+  console.log('query to vizier, ', query);
+
+  xhr.open('GET', url, true);
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      console.log(xhr.responseText);
+      var json = JSON.parse(xhr.responseText);
+      console.log(json);
+    }
+    else if (xhr.status !== 200) {
+        alert('Request failed.  Returned status of ' + xhr.status);
+    }
+  };
+  xhr.send();
+})
+
+aladin.addCatalog(A.catalogFromVizieR('I/345/gaia2', '12.5116686 -17.607493', 0.01, {onClick: 'showTable'}));
+

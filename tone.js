@@ -21,10 +21,7 @@ var sequenceDuration = 5;
 var durationSum = 0;
 var phaseElt = document.getElementById('phase');
 for(var i = 0; i < mags.length; i++) {
-  var note = maxFreq - ((maxFreq - minFreq)*((mags[i] - minMag)/(maxMag - minMag)));
-  console.log(mags[i], note);
   var startingPhase = startingPhases[i];
-  phaseElt.innerHTML = startingPhase;
 
   var duration;
   if (i==mags.length-1) {
@@ -34,9 +31,17 @@ for(var i = 0; i < mags.length; i++) {
     duration = startingPhases[i + 1] - startingPhase;
   }
   duration *= sequenceDuration;
-  console.log('duration:', duration)
 
+  var note = maxFreq - ((maxFreq - minFreq)*((mags[i] - minMag)/(maxMag - minMag)));
   synth.triggerAttackRelease(note, duration, durationSum);
+  Tone.Transport.schedule(function(time){
+    console.log('duration:', duration)
+    console.log('trigger', time);
+    phaseElt.innerHTML = time;
+  }, durationSum);
+ 
   durationSum += duration;
 }
 console.log("sum, ", durationSum)
+Tone.Transport.start()
+

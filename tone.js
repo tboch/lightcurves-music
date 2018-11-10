@@ -1,7 +1,16 @@
 Tone.Transport.bpm.value = 100;
 
 // http://tonejs.org/docs/#DuoSynth
-var synth = new Tone.FMSynth();
+var synth = new Tone.Synth({
+    envelope: {
+        attack : 0.005,
+        decay : 0.1, 
+        sustain : 0.3,
+        release: 1 
+    }
+});
+
+
 var gain  = new Tone.Gain(0.5);
 //synth.oscillator = new Tone.OmniOscillator('C4', 'pwm');
 synth.connect(gain);

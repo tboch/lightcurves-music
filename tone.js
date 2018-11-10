@@ -48,8 +48,11 @@ Tone.Transport.start()
     
 var aladin = A.aladin('#aladin-lite-div', {target: '12.5116686 -17.607493', fov: 0.01});
 
+var source;
+
 aladin.on('objectClicked', function(object) {
       console.log(object.data);
+      source = object.data.Source;
 })
 
 aladin.addCatalog(A.catalogFromVizieR('I/345/gaia2', '12.5116686 -17.607493', 0.01, {onClick: 'showTable'}));

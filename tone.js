@@ -51,10 +51,29 @@ var aladin = A.aladin('#aladin-lite-div', {target: '12.5116686 -17.607493', fov:
 var source;
 
 aladin.on('objectClicked', function(object) {
-      console.log(object.data);
-      source = object.data.Source;
+  source = object.data.Source;
+  var xhr = new XMLHttpRequest();
+  var query = 'SELECT g_transit_time,g_transit_mag FROM "I/345/transits" where source_id=' + source;
+  var url = 'http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync?'
+  url += '&request=doQuery&lang=adql&format=json&phase=run';
+  url += '&query=' + encodeURIComponent(query);
+
+  console.log('query to vizier, ', query);
+
+  xhr.open('GET', url, true);
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      console.log(xhr.responseText);
+      var json = JSON.parse(xhr.responseText);
+      console.log(json);
+    }
+    else if (xhr.status !== 200) {
+        alert('Request failed.  Returned status of ' + xhr.status);
+    }
+  };
+  xhr.send();
 })
 
 aladin.addCatalog(A.catalogFromVizieR('I/345/gaia2', '12.5116686 -17.607493', 0.01, {onClick: 'showTable'}));
-
 

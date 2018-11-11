@@ -1,44 +1,30 @@
+Tone.Transport.bpm.value = 100;
+// http://tonejs.org/docs/#DuoSynth
+var synth = new Tone.FMSynth();
+//var synth = new Tone.PolySynth(6, Tone.Synth).toMaster();
+synth.set({
+            'envelope': 
+                {
+                    attack: 0.005,
+                    decay: 0.3,
+                    sustain: 0.1,
+                    release: 0.05
+                }
+});
+
+
+var gain  = new Tone.Gain(0.5);
+synth.connect(gain);
+gain.toMaster();
+
 function playSoundForStars(stars) {
     if (!stars || stars.length==0) {
         return;
     }
 
-    Tone.Transport.bpm.value = 100;
 
 
 
-    // http://tonejs.org/docs/#DuoSynth
-    var synth = new Tone.FMSynth();
-    synth = new Tone.PolySynth(6, Tone.Synth).toMaster();
-    synth.set({
-            'envelope': 
-                {
-                    attack: 0.005,
-                    decay: 0.3,
-                    sustain: 0.3,
-                    release: 0.1
-                }
-        });
-
-
-    var gain  = new Tone.Gain(0.5);
-    //synth.oscillator = new Tone.OmniOscillator('C4', 'pwm');
-    synth.connect(gain);
-    gain.toMaster();
-
-/*
-var mags = starsEstimate["2369538890337581056"].mag;
-var startingPhases = starsEstimate["2369538890337581056"].phase;
-
-var mags2 = stars2Estimate["4047585189923411328"].mag;
-var startingPhases2 = stars2Estimate["4047585189923411328"].phase;
-*/
-
-
-//var tones = ['C2', 'D2', 'E2', 'F#2', 'G#2', 'A#3', 'C3', 'D3', 'E3', 'F#3', 'G#3', 'A#4', 'C4', 'D4', 'E4', 'F#4', 'G#4'];
-//var tones = ['C2', 'C#2', 'D2', 'D#2', 'E2', 'F2', 'F#2', 'G2', 'G#2','A3', 'A#3', 'B3'];
-//var tones = ['C3', 'D3', 'E3', 'F3', 'G3', 'A4', 'B4'];
-//var tones = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3'];
     var tones = ['C3', 'D#3', 'F3', 'G3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G4', 'G#4', 'A#4', 'C5', 'D#5'];
 
     var mags = [];
@@ -51,7 +37,7 @@ var startingPhases2 = stars2Estimate["4047585189923411328"].phase;
 
     var minMag = Math.min(...mags);
     var maxMag = Math.max(...mags);
-    var sequenceDuration = 5;
+    var sequenceDuration = 20;
     var durationSum = 0;
     var phaseElt = document.getElementById('phase');
     var counter = 0;
@@ -61,9 +47,7 @@ var startingPhases2 = stars2Estimate["4047585189923411328"].phase;
 
         var duration;
         duration = startingPhases[i + 1] - startingPhase;
-        console.log('1111', duration);
         duration *= sequenceDuration;
-        console.log('222', duration);
 
         var notesToPlay = [];
         for (var k=0; k<stars.length; k++) {
@@ -72,20 +56,22 @@ var startingPhases2 = stars2Estimate["4047585189923411328"].phase;
             var note = tones[tones.length-1-noteIdx];
             notesToPlay.push(note);
         }
-        synth.triggerAttackRelease(notesToPlay, duration/2., durationSum);
+        console.log('We re playing:', notesToPlay, duration, durationSum);
+        synth.triggerAttackRelease(notesToPlay[0], duration/2, durationSum + Tone.Transport.toSeconds(Tone.Transport.ticks + "i"));
 
   
+/*
+        Tone.Transport.schedule(function(time){
+        console.log('duration:', duration)
+        console.log('trigger', time);
+        console.log(time/sequenceDuration);
 
-    Tone.Transport.schedule(function(time){
-    console.log('duration:', duration)
-    console.log('trigger', time);
-    console.log(time/sequenceDuration);
-
-    phaseElt.innerHTML = startingPhases[counter];
-    counter++;
+        phaseElt.innerHTML = startingPhases[counter];
+        counter++;
   }, durationSum);
+  */
 
-  durationSum += duration;
+        durationSum += duration;
     }
     console.log("sum, ", durationSum)
     Tone.Transport.start()

@@ -119,6 +119,6 @@ aladin.on('objectClicked', function(object) {
 })
 
 //aladin.addCatalog(A.catalogFromVizieR('I/345/gaia2', '12.5116686 -17.607493', 0.01, {onClick: 'showTable', color: 'red'}));
-aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', {onClick: 'showTable'}));
+aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', {color: 'red', onClick: 'showTable'}));
 
 

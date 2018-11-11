@@ -1,10 +1,16 @@
-Tone.Transport.bpm.value = 100;
+function playSoundForStars(stars) {
+    if (!stars || stars.length==0) {
+        return;
+    }
+
+    Tone.Transport.bpm.value = 100;
 
 
-// http://tonejs.org/docs/#DuoSynth
-var synth = new Tone.FMSynth();
-synth = new Tone.PolySynth(6, Tone.Synth).toMaster();
-synth.set({
+
+    // http://tonejs.org/docs/#DuoSynth
+    var synth = new Tone.FMSynth();
+    synth = new Tone.PolySynth(6, Tone.Synth).toMaster();
+    synth.set({
             'envelope': 
                 {
                     attack: 0.005,
@@ -15,101 +21,103 @@ synth.set({
         });
 
 
-var gain  = new Tone.Gain(0.5);
-//synth.oscillator = new Tone.OmniOscillator('C4', 'pwm');
-synth.connect(gain);
-gain.toMaster();
+    var gain  = new Tone.Gain(0.5);
+    //synth.oscillator = new Tone.OmniOscillator('C4', 'pwm');
+    synth.connect(gain);
+    gain.toMaster();
 
-//synth.voice0.oscillator.type = 'triangle';
-// synth.voice1.oscillator.type = 'triangle';
-
-var stars = {"2369538890337581056": {"phase": [0.04479915581100794, 0.2067449955304341, 0.2711185148128382, 0.29455082617091055, 0.3215073421923412, 0.32684048294031237, 0.3361653923395087, 0.35968560488320583, 0.3615389838067129, 0.38655421971901166, 0.4265858613331835, 0.466104441305765, 0.47689459315224125, 0.5212273101108214, 0.5311513188324355, 0.541436109181315, 0.5419414706789117, 0.5766345568323161, 0.5864499900091412, 0.6064829867075857, 0.6416814343585868, 0.6630241235662255, 0.6716249733172647, 0.7411560770993955, 0.7545354462761151, 0.8013965177838611, 0.806202954626066, 0.8196702249886103, 0.8248703888224338, 0.8899172663491043], "mag": [15.492376, 15.752078, 15.78715, 15.82181, 15.820882, 15.832815, 15.821575, 15.829121, 15.815545, 15.828069, 15.826036, 15.829264, 15.835094, 15.841603, 15.892994, 15.869608, 15.897626, 15.927849, 15.924864, 15.89397, 15.461832, 14.964028, 14.994702, 14.801614, 14.897686, 15.105296, 15.020072, 15.135538, 15.070231, 15.231863]}};
-var starsEstimate = {"2369538890337581056": {"phase": [0.0, 0.017939017519748954, 0.03587803503949791, 0.05381705255924686, 0.07175607007899582, 0.08969508759874475, 0.10763410511849372, 0.12557312263824266, 0.14351214015799163, 0.16145115767774057, 0.1793901751974895, 0.19732919271723848, 0.21526821023698745, 0.23320722775673636, 0.2511462452764853, 0.26908526279623424, 0.28702428031598326, 0.3049632978357322, 0.32290231535548114, 0.3408413328752301, 0.358780350394979, 0.376719367914728, 0.39465838543447695, 0.4125974029542259, 0.4305364204739749, 0.44847543799372386, 0.4664144555134727, 0.4843534730332217, 0.5022924905529706, 0.5202315080727197, 0.5381705255924685, 0.5561095431122175, 0.5740485606319665, 0.5919875781517154, 0.6099265956714645, 0.6278656131912133, 0.6458046307109623, 0.6637436482307112, 0.6816826657504602, 0.6996216832702091, 0.717560700789958, 0.7354997183097071, 0.753438735829456, 0.771377753349205, 0.7893167708689539, 0.8072557883887028, 0.8251948059084518, 0.8431338234282008, 0.8610728409479498, 0.8790118584676987], "mag": [15.291923555245404, 15.39119332240142, 15.47616963087816, 15.545927408697537, 15.601620669995697, 15.645286083550644, 15.678902093157461, 15.70439005654174, 15.723619457862299, 15.738412993092766, 15.750551538722107, 15.76179143462224, 15.773930649882118, 15.788767045719283, 15.807096067202963, 15.820656087767304, 15.825328347534821, 15.824651960547953, 15.82416485348, 15.825601354495916, 15.826174028395542, 15.826415736911542, 15.827512413969316, 15.830087764584505, 15.834828530464108, 15.846839028643615, 15.873904108551585, 15.910257817123863, 15.93652744521421, 15.915701172167758, 15.792914248405225, 15.543336718790613, 15.221697071019832, 14.955457772125385, 14.812350011840579, 14.76772609884182, 14.798249348463116, 14.878394015284243, 14.966446942780749, 15.040149210238724, 15.090646189036875, 15.132966952656375, 15.176424384787424, 15.212747101257548, 15.23266515310928, 15.231389292449933, 15.210053216710207, 15.170117924693159, 15.112964672572389, 15.039898841964373]}};
-var stars2Estimate = {"4047585189923411328": {"phase": [0.0, 0.008644959104989337, 0.03362149863683298, 0.042266457741822354, 0.06724299727366596, 0.07588795637865538, 0.10086449591049895, 0.1095094550154884, 0.13448599454733193, 0.14313095365232142, 0.1681074931841649, 0.17675245228915426, 0.2017289918209979, 0.2103739509259873, 0.23535049045783088, 0.2439954495628203, 0.26897198909466385, 0.2776169481996533, 0.3025934877314968, 0.31123844683648616, 0.3362149863683298, 0.34485994547331916, 0.36983648500516275, 0.3784814441101522, 0.4034579836419958, 0.4121029427469852, 0.4370794822788287, 0.4457244413838182, 0.47070098091566176, 0.47934594002065106, 0.5043224795524947, 0.5129674386574841, 0.5379439781893277, 0.5465889372943171, 0.5715654768261607, 0.5802104359311502, 0.6051869754629936, 0.6138319345679831, 0.6388084740998267, 0.6474534332048162, 0.6724299727366596, 0.7060514713734926, 0.7396729700103255, 0.7732944686471586, 0.8069159672839916, 0.8405374659208246, 0.8741589645576574, 0.9077804631944905, 0.9414019618313235, 0.9750234604681565], "mag": [15.550729472285298, 15.287910867932453, 15.646064874079855, 15.345545953552403, 15.728129121027848, 15.401518104924435, 15.795843798649145, 15.454997112545811, 15.84824639599563, 15.505122486163145, 15.886758833630267, 15.551001220711441, 15.914534144737502, 15.593298362122368, 15.934714688477982, 15.645404683430968, 15.950398992101327, 15.698052537699311, 15.96464946333046, 15.73040998835927, 15.979687369286893, 15.73695282882187, 15.987326133095422, 15.728568358370467, 15.972162952834879, 15.720154729128524, 15.918570383855524, 15.741921681025701, 15.816229734939554, 15.782566026527661, 15.676301258383774, 15.81451243167686, 15.51520840256137, 15.825430008447029, 15.34929724250918, 15.816164150383713, 15.19487758389812, 15.788171989172213, 15.068263913455326, 15.743042271970012, 14.981798613088472, 14.933062456297193, 14.916283316290844, 14.92574561552766, 14.955776067436773, 15.000729482855604, 15.054974614574519, 15.112880013420522, 15.170834234192853, 15.229414939094]}};
-//var mags = stars["2369538890337581056"].mag;
+/*
 var mags = starsEstimate["2369538890337581056"].mag;
-//var startingPhases = stars["2369538890337581056"].phase;
 var startingPhases = starsEstimate["2369538890337581056"].phase;
 
 var mags2 = stars2Estimate["4047585189923411328"].mag;
 var startingPhases2 = stars2Estimate["4047585189923411328"].phase;
+*/
 
 
 //var tones = ['C2', 'D2', 'E2', 'F#2', 'G#2', 'A#3', 'C3', 'D3', 'E3', 'F#3', 'G#3', 'A#4', 'C4', 'D4', 'E4', 'F#4', 'G#4'];
 //var tones = ['C2', 'C#2', 'D2', 'D#2', 'E2', 'F2', 'F#2', 'G2', 'G#2','A3', 'A#3', 'B3'];
 //var tones = ['C3', 'D3', 'E3', 'F3', 'G3', 'A4', 'B4'];
 //var tones = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3'];
-var tones = ['C3', 'D#3', 'F3', 'G3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G4', 'G#4', 'A#4', 'C5', 'D#5'];
+    var tones = ['C3', 'D#3', 'F3', 'G3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G4', 'G#4', 'A#4', 'C5', 'D#5'];
 
-var minFreq = 200;
-var maxFreq = 400;
-var minMag = Math.min(...mags);
-var maxMag = Math.max(...mags);
-var sequenceDuration = 5;
-var durationSum = 0;
-var phaseElt = document.getElementById('phase');
-for(var i = 0; i < mags.length; i++) {
-  var startingPhase = startingPhases[i];
+    var mags = [];
+    for (var k=0; k<stars.length; k++) {
+        var star = stars[k];
+        mags = mags.concat(star.mag_estimate);
+    }
 
-  var duration;
-  if (i==mags.length-1) {
-    duration = (1-startingPhase) + startingPhases[0];
-  }
-  else {
-    duration = startingPhases[i + 1] - startingPhase;
-  }
-  duration *= sequenceDuration;
+    var phases = stars[0].phase_estimate;
 
-    /*
-  var note = maxFreq - ((maxFreq - minFreq)*((mags[i] - minMag)/(maxMag - minMag)));
-    note = Tone.Frequency(note).toNote()
-    console.log(note);
-    */
-  var noteIdx = Math.floor((tones.length-1) * (mags[i] - minMag) / (maxMag - minMag));
-    console.log('noteIdx', noteIdx);
-  var note = tones[tones.length-1-noteIdx];
-  console.log(note);
-  console.log(tones.length-1-noteIdx);
-  //synth.triggerAttackRelease(note, duration/2., durationSum);
+    var minMag = Math.min(...mags);
+    var maxMag = Math.max(...mags);
+    var sequenceDuration = 5;
+    var durationSum = 0;
+    var phaseElt = document.getElementById('phase');
+    var counter = 0;
+    var startingPhases = phases;
+    for(var i = 0; i < phases.length-1; i++) {
+        var startingPhase = startingPhases[i];
 
-  var note2Idx = Math.floor((tones.length-1) * (mags2[i] - minMag) / (maxMag - minMag));
-  var note2 = tones[tones.length-1-note2Idx];
-  synth.triggerAttackRelease([note, note2], duration/2., durationSum);
+        var duration;
+        duration = startingPhases[i + 1] - startingPhase;
+        console.log('1111', duration);
+        duration *= sequenceDuration;
+        console.log('222', duration);
+
+        var notesToPlay = [];
+        for (var k=0; k<stars.length; k++) {
+            var star = stars[k];
+            var noteIdx = Math.floor((tones.length-1) * (star.mag_estimate[i] - minMag) / (maxMag - minMag));
+            var note = tones[tones.length-1-noteIdx];
+            notesToPlay.push(note);
+        }
+        synth.triggerAttackRelease(notesToPlay, duration/2., durationSum);
+
   
 
-  Tone.Transport.schedule(function(time){
+    Tone.Transport.schedule(function(time){
     console.log('duration:', duration)
     console.log('trigger', time);
-    phaseElt.innerHTML = time;
+    console.log(time/sequenceDuration);
+
+    phaseElt.innerHTML = startingPhases[counter];
+    counter++;
   }, durationSum);
- 
+
   durationSum += duration;
+    }
+    console.log("sum, ", durationSum)
+    Tone.Transport.start()
 }
-console.log("sum, ", durationSum)
-Tone.Transport.start()
+
+
+// END
 
     
 var aladin = A.aladin('#aladin-lite-div', {target: 'sgr a*', fov: 10, cooFrame: 'galactic'});
 
-var source;
 
 aladin.on('objectClicked', function(object) {
-  source = object.data.Source;
+  var sourceId = object.data.source_id;
   var xhr = new XMLHttpRequest();
+  /*
   var query = 'SELECT g_transit_time,g_transit_mag FROM "I/345/transits" where source_id=' + source;
   var url = 'http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync?'
   url += '&request=doQuery&lang=adql&format=json&phase=run';
   url += '&query=' + encodeURIComponent(query);
+  */
+  var url = 'http://cds.unistra.fr/~boch/adass2018-hackathon/data/' + sourceId + '.json';
 
-  console.log('query to vizier, ', query);
 
   xhr.open('GET', url, true);
 
   xhr.onload = function() {
     if (xhr.status === 200) {
       console.log(xhr.responseText);
-      var json = JSON.parse(xhr.responseText);
-      console.log(json);
+      var starParam = JSON.parse(xhr.responseText);
+      playSoundForStars([starParam]);
+      console.log(starParam);
     }
     else if (xhr.status !== 200) {
         alert('Request failed.  Returned status of ' + xhr.status);

@@ -86,6 +86,7 @@ var aladin = A.aladin('#aladin-lite-div', {target: 'sgr a*', fov: 10, cooFrame: 
 
 aladin.on('objectClicked', function(object) {
   var sourceId = object.data.source_id;
+  var period = object.data.pf;
   var xhr = new XMLHttpRequest();
   /*
   var query = 'SELECT g_transit_time,g_transit_mag FROM "I/345/transits" where source_id=' + source;
@@ -94,6 +95,7 @@ aladin.on('objectClicked', function(object) {
   url += '&query=' + encodeURIComponent(query);
   */
   var url = 'http://cds.unistra.fr/~boch/adass2018-hackathon/data/' + sourceId + '.json';
+  window.open('http://cdsxmatch.u-strasbg.fr/gadgets/ifr?url=http://cdsxmatch.u-strasbg.fr/widgets/graphs_VizieR.xml&dataset_url_1=http%3A%2F%2Fcdsarc.u-strasbg.fr%2Fviz-bin%2Fvizgraph%3F-s%3DI%2F345%26-i%3D.graph_sql_lc%26Star%3D' + sourceId + '%26Per%3D' + period + '%26--output%3Dvotable&option_graph_title=I%2F345%20Light%20curves%20of%20source%20' + sourceId + '&option_axis_x_period=' + period + +'&option_axis_x_min=0&option_axis_x_max=1&option_axis_x_label=&option_axis_y_min=11&option_axis_y_max=17&option_axis_y_label=&option_dataset_equation_-1=x&option_dataset_color_-1=blue&option_dataset_size_lines_-1=1&option_dataset_symbol_-1=circle&option_dataset_size_points_-1=1&option_dataset_x_axis_0=&x_err_0=none&option_dataset_y_axis_0=Gmag%20%5Bmag%5D&y_err_0=err&option_dataset_color_0=%2333CC00&option_dataset_size_lines_0=1&option_dataset_symbol_0=circle&option_dataset_size_points_0=1&option_dataset_x_axis_1=&x_err_1=none&option_dataset_y_axis_1=BPmag%20%5Bmag%5D&y_err_1=err&option_dataset_color_1=%230066FF&option_dataset_size_lines_1=1&option_dataset_symbol_1=circle&option_dataset_size_points_1=1&option_dataset_x_axis_2=&x_err_2=none&option_dataset_y_axis_2=RPmag%20%5Bmag%5D&y_err_2=err&option_dataset_color_2=%23D80000&option_dataset_size_lines_2=1&option_dataset_symbol_2=circle&option_dataset_size_points_2=1&option_axis_x_log=false&option_axis_x_reverse=false&option_axis_x_phase=true&option_axis_y_log=false&option_axis_y_reverse=true&option_dataset_serie_-1=false&option_dataset_lines_-1=true&option_dataset_points_-1=false&option_dataset_serie_0=true&option_dataset_lines_0=false&option_dataset_points_0=true&option_dataset_serie_1=true&option_dataset_lines_1=false&option_dataset_points_1=true&option_dataset_serie_2=true&option_dataset_lines_2=false&option_dataset_points_2=true', 'lightcurve', "height=800,width=700");
 
 
   xhr.open('GET', url, true);

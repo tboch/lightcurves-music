@@ -1,5 +1,6 @@
 Tone.Transport.bpm.value = 100;
 
+
 // http://tonejs.org/docs/#DuoSynth
 var synth = new Tone.FMSynth();
 synth = new Tone.PolySynth(6, Tone.Synth).toMaster();
@@ -38,7 +39,7 @@ var startingPhases2 = stars2Estimate["4047585189923411328"].phase;
 //var tones = ['C2', 'C#2', 'D2', 'D#2', 'E2', 'F2', 'F#2', 'G2', 'G#2','A3', 'A#3', 'B3'];
 //var tones = ['C3', 'D3', 'E3', 'F3', 'G3', 'A4', 'B4'];
 //var tones = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3'];
-var tones = ['C3', 'D#3', 'F3', 'G3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G4', 'G#4', 'A#4'];
+var tones = ['C3', 'D#3', 'F3', 'G3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G4', 'G#4', 'A#4', 'C5', 'D#5'];
 
 var minFreq = 200;
 var maxFreq = 400;
@@ -88,7 +89,7 @@ console.log("sum, ", durationSum)
 Tone.Transport.start()
 
     
-var aladin = A.aladin('#aladin-lite-div', {target: '12.5116686 -17.607493', fov: 0.01});
+var aladin = A.aladin('#aladin-lite-div', {target: 'sgr a*', fov: 10, cooFrame: 'galactic'});
 
 var source;
 
@@ -117,5 +118,7 @@ aladin.on('objectClicked', function(object) {
   xhr.send();
 })
 
-aladin.addCatalog(A.catalogFromVizieR('I/345/gaia2', '12.5116686 -17.607493', 0.01, {onClick: 'showTable'}));
+//aladin.addCatalog(A.catalogFromVizieR('I/345/gaia2', '12.5116686 -17.607493', 0.01, {onClick: 'showTable', color: 'red'}));
+aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', {onClick: 'showTable'}));
+
 

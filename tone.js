@@ -12,6 +12,8 @@ synth.set({
                     release: 0.1
                 }
         });
+
+
 var gain  = new Tone.Gain(0.5);
 //synth.oscillator = new Tone.OmniOscillator('C4', 'pwm');
 synth.connect(gain);

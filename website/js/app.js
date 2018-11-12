@@ -1,8 +1,11 @@
-var playStar = function (starParameter) {
-    var phase_estimateArray = starParameter.phase_estimate.slice(0, 48);
-    var mag_estimateArray = starParameter.mag_estimate.slice(0, 48);
+var playStar = function (star) {
+    if (! star.params) {
+        return;
+    }
+    var phase_estimateArray = star.params.phase_estimate.slice(0, 48);
+    var mag_estimateArray = star.params.mag_estimate.slice(0, 48);
 
-    var phase_2P = starParameter.phase.concat(starParameter.phase.map(function (x) { return 1 + x; }));
+    var phase_2P = star.params.phase.concat(star.params.phase.map(function (x) { return 1 + x; }));
     var phase_estimate_2P = phase_estimateArray.concat(phase_estimateArray.map(function (x) { return 1 + x; }));
 
 
@@ -15,12 +18,18 @@ var playStar = function (starParameter) {
         },
         {
             x: phase_2P,
-            y: starParameter.mag.concat(starParameter.mag),
+            y: star.params.mag.concat(star.params.mag),
             mode: 'markers',
             marker: { color: 'green', size: 8 }
+        },
+        {
+            x: [phase_estimate_2P[star.lcIndex]],
+            y: [mag_estimateArray.concat(mag_estimateArray)[star.lcIndex]],
+            mode: 'markers',
+            marker: { color: '#7EE1F7', size: 8 }
         }
     ];
-    Plotly.newPlot('lightcurve', data, { yaxis: { autorange: "reversed" } });
+    Plotly.newPlot('lightcurve', data, { title: 'Gaia DR2 ' + star.id, showlegend: false, yaxis: { autorange: "reversed" } });
     //Plotly.relayout();
 
 };
@@ -28,8 +37,14 @@ var playStar = function (starParameter) {
 // initialize Aladin Lite
 var aladin = A.aladin('#aladin-lite-div', { target: 'sgr a*', fov: 10, cooFrame: 'galactic', survey: 'P/DSS2/red' });
 
+var currentStar = {
+    params: null,
+    id: null,
+    lcIndex: -1
+};
 // Set how we react when an object is clicked
 aladin.on('objectClicked', function (object) {
+    currentStar.lcIndex = 0;
     var sourceId = object.data.source_id;
     var period = object.data.pf;
     var xhr = new XMLHttpRequest();
@@ -47,9 +62,9 @@ aladin.on('objectClicked', function (object) {
     xhr.onload = function () {
         if (xhr.status === 200) {
             console.log(xhr.responseText);
-            var starParam = JSON.parse(xhr.responseText);
-            playStar(starParam);
-            console.log(starParam);
+            currentStar.params = JSON.parse(xhr.responseText);
+            currentStar.id = sourceId;
+            //playStar(currentStar);
         }
         else if (xhr.status !== 200) {
             alert('Request failed.  Returned status of ' + xhr.status);
@@ -68,12 +83,15 @@ Tone.Transport.bpm.value = 60;
 var loop = new Tone.Loop(function (time) {
 
     Tone.Draw.schedule(function () {
+        playStar(currentStar);
         console.log('update drawing');
         //this callback is invoked from a requestAnimationFrame
         //and will be invoked close to AudioContext time
 
     }, time) //use AudioContext time of the event
 
+    currentStar.lcIndex++;
+    currentStar.lcIndex = currentStar.lcIndex%96;
     //synth.triggerAttack('C4', '+0.05');
     //triggered every 12th note. 
     console.log(Tone.Transport.position);

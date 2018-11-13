@@ -25,14 +25,22 @@ var velocities = [16, 24, 32];
 
 // number of instruments and their colors
 var numInst = 2;
-var colors = [0xff0000, 0x00ff00];
+var colors = ['green', 'red'];
 
+// Describes the list of instruments which will be played
+// In order :
+// - melody synth
+// - kick
+// - add here more instruments
+// Cycles when all instruments have already been added one time
+var globalInstId = 0;
+var typeOfInsts = ['melody', 'kick'];
 Plotly.newPlot('lightcurve', [], {
         yaxis: { autorange: "reversed", title: 'G mag' },
         xaxis: { title: 'phase' },
 
         showlegend: false,
-    });
+});
 
 var startPlayingStar = function (star) {
     if (!star || !star.params) {
@@ -40,7 +48,7 @@ var startPlayingStar = function (star) {
     }
     var params = star.params;
     var color = colors[star.instId];
-    console.log(color);
+    console.log('color: ', color);
     var d = [
         {
             x: params.phase_estimate_2P,
@@ -53,7 +61,7 @@ var startPlayingStar = function (star) {
             x: params.phase_2P,
             y: params.mag_2P,
             mode: 'markers',
-            marker: { color: color.toString(16), size: 8 }
+            marker: { color: color, size: 8 }
         },
         /*{
             x: [params.phase_estimate_2P[star.lcIndex]],
@@ -71,6 +79,7 @@ var aladin = A.aladin('#aladin-lite-div', { target: 'sgr a*', fov: 10, cooFrame:
 var selectedStars = [];
 // Set how we react when an object is clicked
 aladin.on('objectClicked', function (object) {
+    console.log('click', object);
     if (object == null) {
     	Tone.Transport.stop();
         selectedStars = [];
@@ -78,7 +87,13 @@ aladin.on('objectClicked', function (object) {
             yaxis: { autorange: "reversed" },
             showlegend: false,
         });
-        return;
+	globalInstId = 0;
+	var ulElt = document.getElementById('starsList');
+	while (ulElt.hasChildNodes()) {
+  		ulElt.removeChild(ulElt.lastChild);
+	}
+        document.getElementById('textListStars').innerText = "No stars playing";
+	return;
     }
 
     Tone.Transport.start('+0.15');
@@ -105,9 +120,8 @@ aladin.on('objectClicked', function (object) {
             var mag_2P = data.mag.concat(data.mag);
             var phase_2P = data.phase.concat(data.phase.map(function (x) { return 1 + x; }));
 
-	    var instId = Math.floor(Math.random() * numInst)
 	    var synth;
-	    if (instId == 1) {
+	    if (globalInstId == 1) {
 		// Kick
 		synth = new Tone.MembraneSynth({
 			pitchDecay  : 0.05,
@@ -121,7 +135,8 @@ aladin.on('objectClicked', function (object) {
 				sustain  : 0.01 ,
 				release  : 0.5 ,
 				attackCurve  : 'exponential', 
-			}
+			},
+    			"volume": -20,
 		});
 	        var freeverb = new Tone.Freeverb().toMaster();
 		freeverb.dampening.value = 1000;
@@ -129,7 +144,7 @@ aladin.on('objectClicked', function (object) {
 		// Connect lowpass filter to the kick
 		synth.connect(new Tone.Filter(2000));
 	    	synth.toMaster();
-	} else if (instId == 0) {
+	} else if (globalInstId == 0) {
 	        synth = new Tone.FMSynth({
 		    "harmonicity": 1,
 		    "modulationIndex": 3.5,
@@ -157,7 +172,7 @@ aladin.on('objectClicked', function (object) {
 		    }
 		}).toMaster();
 	    }
-
+	    
             var newStar = {
                 params: {
                     mag_2P: mag_2P,
@@ -172,13 +187,26 @@ aladin.on('objectClicked', function (object) {
                 id: sourceId,
                 lcIndex: 0,
 		synth: synth,
-		instId: instId,
+		type: typeOfInsts[globalInstId],
+		instId: globalInstId,
 		vel: velocities[Math.floor(Math.random() * velocities.length)],
             };
             startPlayingStar(newStar);
             selectedStars.push(newStar);
             console.log('star:', newStar);
-        }
+        
+	    // Add to the DOM
+	    var ulElt = document.getElementById('starsList');
+	    var liElt = document.createElement('li');
+            var color = colors[globalInstId];
+	    liElt.innerHTML = "<p style='color: " + color + ";display: inline-block;margin: 0'>" + typeOfInsts[globalInstId] + "</p>"+ ' for source: ' + object.data.source_id;
+
+	    ulElt.appendChild(liElt);
+
+            document.getElementById('textListStars').innerText = "List of stars playing:";
+	    globalInstId++;
+	    globalInstId = globalInstId % numInst;
+	}
         else if (xhr.status !== 200) {
             alert('Request failed.  Returned status of ' + xhr.status);
         }
@@ -263,7 +291,7 @@ var loop = new Tone.Loop(function (time) {
         var currentStar = selectedStars[k];
         var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
-	if (currentStar.instId == 0) {
+	if (currentStar.type == 'melody') {
 		currentStar.lcIndex++;
 		currentStar.lcIndex = currentStar.lcIndex % 96;
 		var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
@@ -274,7 +302,7 @@ var loop = new Tone.Loop(function (time) {
 
 		if (currentStar.lcIndex % 2 >= 0) currentStar.synth.triggerAttackRelease(note, '12n');		
 		console.log(note);
-	} else if (currentStar.instId == 1) {
+	} else if (currentStar.type == 'kick') {
 	    //triggered at different notes
 	    if (t % currentStar.vel == 0) {
             	currentStar.synth.triggerAttackRelease(note, '48n');

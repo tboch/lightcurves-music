@@ -1,82 +1,92 @@
-var updateLightCurve = function (star) {
-    if (!star) {
+var startPlayingStar = function (star) {
+    if (!star || !star.params) {
         return;
     }
-    var phase_estimateArray = star.params.phase_estimate.slice(0, 48);
-    var mag_estimateArray = star.params.mag_estimate.slice(0, 48);
+    var params = star.params;
 
-    var phase_2P = star.params.phase.concat(star.params.phase.map(function (x) { return 1 + x; }));
-    var phase_estimate_2P = phase_estimateArray.concat(phase_estimateArray.map(function (x) { return 1 + x; }));
-
-
-    var data = [
+    var d = [
         {
-            x: phase_estimate_2P,
-            y: mag_estimateArray.concat(mag_estimateArray),
+            x: params.phase_estimate_2P,
+            y: params.mag_estimate_2P,
             mode: 'markers',
-            marker: { color: 'pink', size: 4 }
+            marker: { color: 'pink', size: 4 },
+            name: star.id,
         },
         {
-            x: phase_2P,
-            y: star.params.mag.concat(star.params.mag),
+            x: params.phase_2P,
+            y: params.mag_2P,
             mode: 'markers',
-            marker: { color: 'green', size: 8 }
+            marker: { color: (star.id & 0xffffff).toString(16), size: 8 }
         },
         {
-            x: [phase_estimate_2P[star.lcIndex]],
-            y: [mag_estimateArray.concat(mag_estimateArray)[star.lcIndex]],
+            x: [params.phase_estimate_2P[star.lcIndex]],
+            y: [params.mag_estimate_2P[star.lcIndex]],
             mode: 'markers',
             marker: { color: '#7EE1F7', size: 8 }
         }
     ];
-    Plotly.newPlot('lightcurve', data, { title: 'Gaia DR2 ' + star.id, showlegend: false, yaxis: { autorange: "reversed" } });
-    //Plotly.relayout();
-
+    Plotly.newPlot('lightcurve', d, {
+        yaxis: { autorange: "reversed" },
+        showlegend: false,
+    });
 };
 
 // initialize Aladin Lite
 var aladin = A.aladin('#aladin-lite-div', { target: 'sgr a*', fov: 10, cooFrame: 'galactic', survey: 'P/DSS2/red' });
 
-// list of stars playing, indexed by source_id
-var musicians = [];
-var currentStar = null;
+var selectedStars = [];
 // Set how we react when an object is clicked
 aladin.on('objectClicked', function (object) {
     if (object == null) {
-        currentStar = null;
+        selectedStars = [];
+        Plotly.newPlot('lightcurve', [], {
+            yaxis: { autorange: "reversed" },
+            showlegend: false,
+        });
         return;
     }
-    var sourceId = object.data.source_id;
-    if (musicians.hasOwnProperty(sourceId)) {
-        return;
-    }
-    var period = object.data.pf;
+    var star = object.data;
+    var sourceId = star.source_id;
+    var period = star.pf;
+
     var xhr = new XMLHttpRequest();
-    /*
-    var query = 'SELECT g_transit_time,g_transit_mag FROM "I/345/transits" where source_id=' + source;
-    var url = 'http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync?'
-    url += '&request=doQuery&lang=adql&format=json&phase=run';
-    url += '&query=' + encodeURIComponent(query);
-    */
+
     var url = 'http://cds.unistra.fr/~boch/adass2018-hackathon/data/' + sourceId + '.json';
 
-
     xhr.open('GET', url, true);
-
     xhr.onload = function () {
         if (xhr.status === 200) {
-            currentStar = {
+            console.log(xhr.responseText);
+            var data = JSON.parse(xhr.responseText);
+
+            var phase_estimate = data.phase_estimate.slice(0, 48);
+            var phase_estimate_2P = phase_estimate.concat(phase_estimate.map(function (x) { return 1 + x; }));
+
+            var mag_estimate = data.mag_estimate.slice(0, 48);
+            var mag_estimate_2P = mag_estimate.concat(mag_estimate);
+
+            var mag_2P = data.mag.concat(data.mag);
+            var phase_2P = data.phase.concat(data.phase.map(function (x) { return 1 + x; }));
+
+            var newStar = {
+                params: {
+                    mag_2P: mag_2P,
+                    phase_2P: phase_2P,
+                    mag_estimate_2P: mag_estimate_2P,
+                    phase_estimate_2P: phase_estimate_2P,
+                    minMag: Math.min(...mag_estimate),
+                    maxMag: Math.max(...mag_estimate)
+                },
+                id: sourceId,
                 lcIndex: 0,
-                params: JSON.parse(xhr.responseText),
-                id: sourceId
             };
-
-            currentStar.minMag = Math.min(...currentStar.params.mag_estimate);
-            currentStar.maxMag = Math.max(...currentStar.params.mag_estimate);
-            
-            
-
-            //playStar(currentStar);
+            startPlayingStar(newStar);
+            if (selectedStars.length == 0) {
+                selectedStars.push(newStar);
+            } else {
+                selectedStars[0] = newStar;
+            }
+            console.log('star:', newStar);
         }
         else if (xhr.status !== 200) {
             alert('Request failed.  Returned status of ' + xhr.status);
@@ -115,33 +125,44 @@ notes = ['A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4', 'A4']; // m
 Tone.Transport.bpm.value = 300;
 var synth = new Tone.Synth().toMaster();
 var piano = new Tone.PolySynth(4, Tone.Synth, {
-    "volume" : -1,
-    "oscillator" : {
-        "partials" : [1, 2, 5],
+    "volume": -1,
+    "oscillator": {
+        "partials": [1, 2, 5],
     },
-    "portamento" : 0.005
+    "portamento": 0.005
 }).toMaster();
 var loop = new Tone.Loop(function (time) {
 
     Tone.Draw.schedule(function () {
-        updateLightCurve(currentStar);
-        //console.log('update drawing');
+
         //this callback is invoked from a requestAnimationFrame
         //and will be invoked close to AudioContext time
-
+        for (var i = 0; i < selectedStars.length; i++) {
+            var currentStar = selectedStars[i];
+            currentStar.lcIndex++;
+            currentStar.lcIndex = currentStar.lcIndex % 96;
+            // Update plotly trace
+            var update = {
+                x: [currentStar.params.phase_estimate_2P[currentStar.lcIndex]],
+                y: [currentStar.params.mag_estimate_2P[currentStar.lcIndex]],
+                mode: 'markers',
+                marker: { color: '#7EE1F7', size: 8 }
+            }
+            //Plotly.deleteTraces('lightcurve', 3 * i + 2);
+            //Plotly.addTraces('lightcurve', update, 3 * i + 2);
+        }
     }, time) //use AudioContext time of the event
 
 
-    if (currentStar) {
-        if (currentStar.lcIndex % 12 ==0) {
-            piano.triggerAttackRelease(['C3', 'E3', 'A3'], '1n');
+    for (var k = 0; k < selectedStars.length; k++) {
+        var currentStar = selectedStars[k];
+        if (currentStar.lcIndex % 12 == 0) {
+            //piano.triggerAttackRelease(['C3', 'E3', 'A3'], '1n');
         }
-        currentStar.lcIndex++;
-        currentStar.lcIndex = currentStar.lcIndex % 96;
-        var i = currentStar.lcIndex % 48;
-        var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate[i] - currentStar.minMag) / (currentStar.maxMag - currentStar.minMag));
+        var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
-        synth.triggerAttackRelease(note, '+0.01');
+
+        piano.triggerAttackRelease(note, '24n');
     }
     //triggered every 48th mesure. 
     //console.log(Tone.Transport.position);

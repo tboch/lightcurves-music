@@ -1,3 +1,16 @@
+// load all frames to animate stars
+var starAnimationFrames = [];
+for (var k = 0; k<=30; k++) {
+    var image = new Image();
+    image.idx = k;
+    image.onload = function () {
+        starAnimationFrames[this.idx] = this;
+    };
+    image.src = 'pics/star-frames/f' + k + '.png';
+}
+
+
+
 var notes = ['C3', 'D#3', 'F3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G#4', 'A#4', 'C5', 'D#5'];
 //notes = ['A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4', 'A4']; // minor pentatonic
 //notes = ['C3', 'C3#', 'D3', 'D3#', 'E3', 'F3', 'F3#', 'G3', 'G3#', 'A3', 'A3#', 'B3', 'C4', 'C4#', 'D4', 'D4#', 'E4', 'F4', 'F4#', 'G4', 'G4#', 'A4', 'A4#', 'B4'];
@@ -48,7 +61,6 @@ var startPlayingStar = function (star) {
     }
     var params = star.params;
     var color = colors[star.instId];
-    console.log('color: ', color);
     var d = [
         {
             x: params.phase_estimate_2P,
@@ -115,7 +127,6 @@ aladin.on('objectClicked', function (object) {
         xhr.open('GET', url, true);
         xhr.onload = function () {
             if (xhr.status === 200) {
-                console.log(xhr.responseText);
                 var data = JSON.parse(xhr.responseText);
 
                 var phase_estimate = data.phase_estimate.slice(0, 48);
@@ -198,9 +209,11 @@ aladin.on('objectClicked', function (object) {
                     instId: globalInstId,
                     vel: velocities[Math.floor(Math.random() * velocities.length)],
                 };
+                object.starRef = newStar;
+                newStar.ref = object;
                 startPlayingStar(newStar);
                 selectedStars.push(newStar);
-                console.log('star:', newStar);
+                //console.log('star:', newStar);
 
                 // Add to the DOM
                 var ulElt = document.getElementById('starsList');
@@ -218,15 +231,15 @@ aladin.on('objectClicked', function (object) {
                 alert('Request failed.  Returned status of ' + xhr.status);
             }
         }
-    xhr.send();
+        xhr.send();
     }
 });
 
 var shapesCache = {};
-var getShape = function(diam, r, g, b) {
+var getShape = function (diam, r, g, b) {
     var key = diam + '-' + r + '-' + g + '-' + b;
 
-    if ( shapesCache[key] === undefined ) {
+    if (shapesCache[key] === undefined) {
         var c = document.createElement('canvas');
         c.width = c.height = diam;
         var ctx = c.getContext('2d');
@@ -234,7 +247,7 @@ var getShape = function(diam, r, g, b) {
         var color = 'rgb(' + r + ',' + g + ',' + b + ')';
         ctx.fillStyle = color;
         ctx.fillStyle = color;
-        ctx.arc(diam/2., diam/2., diam/2., 0, 2*Math.PI, true);
+        ctx.arc(diam / 2., diam / 2., diam / 2., 0, 2 * Math.PI, true);
         ctx.fill();
 
         shapesCache[key] = c;
@@ -245,35 +258,29 @@ var getShape = function(diam, r, g, b) {
 
 
 // define custom draw function
-var drawFunction = function (source, canvasCtx, viewParams) {
-    canvasCtx.beginPath();
-    canvasCtx.arc(source.x, source.y, 6, 0, 2 * Math.PI, false);
-    canvasCtx.closePath();
-    // assign color based on period
-    var period = source.data.pf;
-    if (period > 3) {
-        period = 3;
+var starDrawFunction = function (source, canvasCtx, viewParams) {
+    if (source.starRef) {
+        drawAnimatedStar(source, canvasCtx, source.starRef.lcIndex);
+        return;
     }
-    canvasCtx.strokeStyle = '#' + Math.floor(0xffffff / (3 * period)).toString(16);
-
-    canvasCtx.lineWidth = 5;
-    canvasCtx.globalAlpha = 0.9,
-        canvasCtx.stroke();
-
-};
-
-var drawAnimatedStar = function(canvas, progression) { // progression between 0 and 1
-
-};
-
-var pulsarDrawFunction = function(source, canvasCtx, viewParams) {
     var diam = 14;
-    canvasCtx.drawImage(getShape(diam, 130, 30, 108), source.x-diam/2., source.y-diam/2.);
+    canvasCtx.drawImage(getShape(diam, 230, 20, 20), source.x - diam / 2., source.y - diam / 2.);
+};
+
+var drawAnimatedStar = function (source, canvasCtx, idx) { // progression between 0 and 1
+    var img = starAnimationFrames[idx % starAnimationFrames.length];
+    canvasCtx.drawImage(img, source.x - img.width/2, source.y - img.height/2);
+
+};
+
+var pulsarDrawFunction = function (source, canvasCtx, viewParams) {
+    var diam = 14;
+    canvasCtx.drawImage(getShape(diam, 130, 30, 108), source.x - diam / 2., source.y - diam / 2.);
 };
 // load catalogue with positions of Gaia stars for which we have light curves
 // draw function is too slow for that many sources :(
-aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', { color: 'red', onClick: 'showTable' }));
-aladin.addCatalog(A.catalogFromVizieR('J/ApJ/804/23/pulsars', '0 +0', 180,  {shape: pulsarDrawFunction, onClick: 'showTable', name: 'Pulsars' }));
+aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', { shape: starDrawFunction, onClick: 'showTable' }));
+aladin.addCatalog(A.catalogFromVizieR('J/ApJ/804/23/pulsars', '0 +0', 180, { shape: pulsarDrawFunction, onClick: 'showTable', name: 'Pulsars' }));
 //var synth = new Tone.DuoSynth();
 /*
 var synth = new Tone.FMSynth();
@@ -327,7 +334,6 @@ var synth = new Tone.Synth({
 var playChords = false;
 document.getElementById('chordsControl').addEventListener('change', function (e) {
     playChords = e.target.checked;
-    console.log(playChords);
 });
 
 var t = 0;
@@ -374,7 +380,6 @@ var loop = new Tone.Loop(function (time) {
             }
 
             if (currentStar.lcIndex % 2 >= 0) currentStar.synth.triggerAttackRelease(note, '12n');
-            console.log(note);
         } else if (currentStar.type == 'kick') {
             //triggered at different notes
             if (t % currentStar.vel == 0) {

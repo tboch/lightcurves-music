@@ -1,70 +1,83 @@
-var playStar = function (star) {
+var startPlayingStar = function (star) {
     if (! star.params) {
         return;
     }
-    var phase_estimateArray = star.params.phase_estimate.slice(0, 48);
-    var mag_estimateArray = star.params.mag_estimate.slice(0, 48);
+    var params = star.params;    
 
-    var phase_2P = star.params.phase.concat(star.params.phase.map(function (x) { return 1 + x; }));
-    var phase_estimate_2P = phase_estimateArray.concat(phase_estimateArray.map(function (x) { return 1 + x; }));
-
-
-    var data = [
+    var d = [
         {
-            x: phase_estimate_2P,
-            y: mag_estimateArray.concat(mag_estimateArray),
+            x: params.phase_estimate_2P,
+            y: params.mag_estimate_2P,
             mode: 'markers',
-            marker: { color: 'pink', size: 4 }
+            marker: { color: 'pink', size: 4 },
+            name: star.id,
+	},
+        {
+            x: params.phase_2P,
+            y: params.mag_2P,
+            mode: 'markers',
+            marker: { color: (star.id & 0xffffff).toString(16), size: 8 }
         },
         {
-            x: phase_2P,
-            y: star.params.mag.concat(star.params.mag),
-            mode: 'markers',
-            marker: { color: 'green', size: 8 }
-        },
-        {
-            x: [phase_estimate_2P[star.lcIndex]],
-            y: [mag_estimateArray.concat(mag_estimateArray)[star.lcIndex]],
+            x: [params.phase_estimate_2P[star.lcIndex]],
+            y: [params.mag_estimate_2P[star.lcIndex]],
             mode: 'markers',
             marker: { color: '#7EE1F7', size: 8 }
         }
     ];
-    Plotly.newPlot('lightcurve', data, { title: 'Gaia DR2 ' + star.id, showlegend: false, yaxis: { autorange: "reversed" } });
-    //Plotly.relayout();
-
+    Plotly.newPlot('lightcurve', d, {
+    	yaxis: { autorange: "reversed" },
+   	showLegend: false, 
+    });
 };
 
 // initialize Aladin Lite
 var aladin = A.aladin('#aladin-lite-div', { target: 'sgr a*', fov: 10, cooFrame: 'galactic', survey: 'P/DSS2/red' });
 
-var currentStar = {
-    params: null,
-    id: null,
-    lcIndex: -1
-};
+
+var selectedStars = [];
 // Set how we react when an object is clicked
 aladin.on('objectClicked', function (object) {
-    currentStar.lcIndex = 0;
-    var sourceId = object.data.source_id;
-    var period = object.data.pf;
+    var star = object.data;
+    var sourceId = star.source_id;
+    var period = star.pf;
+    
     var xhr = new XMLHttpRequest();
-    /*
-    var query = 'SELECT g_transit_time,g_transit_mag FROM "I/345/transits" where source_id=' + source;
-    var url = 'http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync?'
-    url += '&request=doQuery&lang=adql&format=json&phase=run';
-    url += '&query=' + encodeURIComponent(query);
-    */
+    
     var url = 'http://cds.unistra.fr/~boch/adass2018-hackathon/data/' + sourceId + '.json';
 
-
     xhr.open('GET', url, true);
-
     xhr.onload = function () {
         if (xhr.status === 200) {
             console.log(xhr.responseText);
-            currentStar.params = JSON.parse(xhr.responseText);
-            currentStar.id = sourceId;
-            //playStar(currentStar);
+	    var data = JSON.parse(xhr.responseText);
+	    
+	    var phase_estimate = data.phase_estimate.slice(0, 48);
+    	    var phase_estimate_2P = phase_estimate.concat(phase_estimate.map(function (x) { return 1 + x; }));
+    	    
+	    var mag_estimate = data.mag_estimate.slice(0, 48);
+    	    var mag_estimate_2P = mag_estimate.concat(mag_estimate);
+    	    
+	    var mag_2P = data.mag.concat(data.mag);
+    	    var phase_2P = data.phase.concat(data.phase.map(function (x) { return 1 + x; }));
+
+	    var newStar = {
+    		params: {
+		    mag_2P: mag_2P,
+		    phase_2P: phase_2P,
+		    mag_estimate_2P: mag_estimate_2P,
+		    phase_estimate_2P: phase_estimate_2P,
+		},
+    		id: sourceId,
+    		lcIndex: 0,
+	    };
+            startPlayingStar(newStar);
+	    if (selectedStars.length == 0) {
+	        selectedStars.push(newStar);
+	    } else {
+		selectedStars[0] = newStar;
+	    }
+            console.log('star:', newStar);
         }
         else if (xhr.status !== 200) {
             alert('Request failed.  Returned status of ' + xhr.status);
@@ -83,15 +96,25 @@ Tone.Transport.bpm.value = 60;
 var loop = new Tone.Loop(function (time) {
 
     Tone.Draw.schedule(function () {
-        playStar(currentStar);
-        console.log('update drawing');
+        //playStar(currentStar);
+	console.log('update drawing');
         //this callback is invoked from a requestAnimationFrame
         //and will be invoked close to AudioContext time
-
+	for (var i = 0; i < selectedStars.length; i++) {
+	    var currentStar = selectedStars[i];
+	    currentStar.lcIndex++;
+	    currentStar.lcIndex = currentStar.lcIndex%96;
+	    // Update plotly trace
+	    var update = {
+		x: [currentStar.params.phase_estimate_2P[currentStar.lcIndex]],
+		y: [currentStar.params.mag_estimate_2P[currentStar.lcIndex]],
+		mode: 'markers',
+            	marker: { color: '#7EE1F7', size: 8 }
+	    }
+	    Plotly.deleteTraces('lightcurve', 3*i + 2);
+    	    Plotly.addTraces('lightcurve', update, 3*i+2);
+	}
     }, time) //use AudioContext time of the event
-
-    currentStar.lcIndex++;
-    currentStar.lcIndex = currentStar.lcIndex%96;
     //synth.triggerAttack('C4', '+0.05');
     //triggered every 12th note. 
     console.log(Tone.Transport.position);

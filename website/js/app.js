@@ -36,10 +36,10 @@ var colors = ['green', 'red'];
 var globalInstId = 0;
 var typeOfInsts = ['melody', 'kick'];
 Plotly.newPlot('lightcurve', [], {
-        yaxis: { autorange: "reversed", title: 'G mag' },
-        xaxis: { title: 'phase' },
+    yaxis: { autorange: "reversed", title: 'G mag' },
+    xaxis: { title: 'phase' },
 
-        showlegend: false,
+    showlegend: false,
 });
 
 var startPlayingStar = function (star) {
@@ -81,138 +81,168 @@ var selectedStars = [];
 aladin.on('objectClicked', function (object) {
     console.log('click', object);
     if (object == null) {
-    	Tone.Transport.stop();
+        Tone.Transport.stop();
         selectedStars = [];
         Plotly.newPlot('lightcurve', [], {
             yaxis: { autorange: "reversed" },
             showlegend: false,
         });
-	globalInstId = 0;
-	var ulElt = document.getElementById('starsList');
-	while (ulElt.hasChildNodes()) {
-  		ulElt.removeChild(ulElt.lastChild);
-	}
+        globalInstId = 0;
+        var ulElt = document.getElementById('starsList');
+        while (ulElt.hasChildNodes()) {
+            ulElt.removeChild(ulElt.lastChild);
+        }
         document.getElementById('textListStars').innerText = "No stars playing";
-	return;
+        return;
     }
 
     Tone.Transport.start('+0.15');
     var star = object.data;
-    var sourceId = star.source_id;
-    var period = star.pf;
+    var isGaiaVariable = false;
+    if (star.hasOwnProperty('source_id')) {
+        isGaiaVariable = true;
 
-    var xhr = new XMLHttpRequest();
+    }
 
-    var url = 'http://cds.unistra.fr/~boch/adass2018-hackathon/data/' + sourceId + '.json';
+    if (isGaiaVariable) {
+        var sourceId = star.source_id;
+        var period = star.pf;
 
-    xhr.open('GET', url, true);
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            console.log(xhr.responseText);
-            var data = JSON.parse(xhr.responseText);
+        var xhr = new XMLHttpRequest();
 
-            var phase_estimate = data.phase_estimate.slice(0, 48);
-            var phase_estimate_2P = phase_estimate.concat(phase_estimate.map(function (x) { return 1 + x; }));
+        var url = 'http://cds.unistra.fr/~boch/adass2018-hackathon/data/' + sourceId + '.json';
 
-            var mag_estimate = data.mag_estimate.slice(0, 48);
-            var mag_estimate_2P = mag_estimate.concat(mag_estimate);
+        xhr.open('GET', url, true);
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                console.log(xhr.responseText);
+                var data = JSON.parse(xhr.responseText);
 
-            var mag_2P = data.mag.concat(data.mag);
-            var phase_2P = data.phase.concat(data.phase.map(function (x) { return 1 + x; }));
+                var phase_estimate = data.phase_estimate.slice(0, 48);
+                var phase_estimate_2P = phase_estimate.concat(phase_estimate.map(function (x) { return 1 + x; }));
 
-	    var synth;
-	    if (globalInstId == 1) {
-		// Kick
-		synth = new Tone.MembraneSynth({
-			pitchDecay  : 0.05,
-			octaves  : 8,
-			oscillator  : {
-				type : 'sine',
-			},
-			envelope  : {
-				attack  : 0.001 ,
-				decay  : 0.4 ,
-				sustain  : 0.01 ,
-				release  : 0.5 ,
-				attackCurve  : 'exponential', 
-			},
-    			"volume": -20,
-		});
-	        var freeverb = new Tone.Freeverb().toMaster();
-		freeverb.dampening.value = 1000;
-		synth.connect(freeverb);
-		// Connect lowpass filter to the kick
-		synth.connect(new Tone.Filter(2000));
-	    	synth.toMaster();
-	} else if (globalInstId == 0) {
-	        synth = new Tone.FMSynth({
-		    "harmonicity": 1,
-		    "modulationIndex": 3.5,
-		    "carrier": {
-			"oscillator": {
-			    "instId": "custom",
-			    "partials": [0, 1, 0, 2]
-			},
-			"envelope": {
-			    "attack": 0.08,
-			    "decay": 0.3,
-			    "sustain": 0,
-			},
-		    },
-		    "modulator": {
-			"oscillator": {
-			    "instId": "square"
-			},
-			"envelope": {
-			    "attack": 0.1,
-			    "decay": 0.2,
-			    "sustain": 0.3,
-			    "release": 0.01
-			},
-		    }
-		}).toMaster();
-	    }
-	    
-            var newStar = {
-                params: {
-                    mag_2P: mag_2P,
-                    phase_2P: phase_2P,
-                    mag_estimate_2P: mag_estimate_2P,
-                    phase_estimate_2P: phase_estimate_2P,
-                    // minMag: 15,
-                    // maxMag: 20
-                    minMag: Math.min(...mag_estimate),
-                    maxMag: Math.max(...mag_estimate)
-                },
-                id: sourceId,
-                lcIndex: 0,
-		synth: synth,
-		type: typeOfInsts[globalInstId],
-		instId: globalInstId,
-		vel: velocities[Math.floor(Math.random() * velocities.length)],
-            };
-            startPlayingStar(newStar);
-            selectedStars.push(newStar);
-            console.log('star:', newStar);
-        
-	    // Add to the DOM
-	    var ulElt = document.getElementById('starsList');
-	    var liElt = document.createElement('li');
-            var color = colors[globalInstId];
-	    liElt.innerHTML = "<p style='color: " + color + ";display: inline-block;margin: 0'>" + typeOfInsts[globalInstId] + "</p>"+ ' for source: ' + object.data.source_id;
+                var mag_estimate = data.mag_estimate.slice(0, 48);
+                var mag_estimate_2P = mag_estimate.concat(mag_estimate);
 
-	    ulElt.appendChild(liElt);
+                var mag_2P = data.mag.concat(data.mag);
+                var phase_2P = data.phase.concat(data.phase.map(function (x) { return 1 + x; }));
 
-            document.getElementById('textListStars').innerText = "List of stars playing:";
-	    globalInstId++;
-	    globalInstId = globalInstId % numInst;
-	}
-        else if (xhr.status !== 200) {
-            alert('Request failed.  Returned status of ' + xhr.status);
+                var synth;
+                if (globalInstId == 1) {
+                    // Kick
+                    synth = new Tone.MembraneSynth({
+                        pitchDecay: 0.05,
+                        octaves: 8,
+                        oscillator: {
+                            type: 'sine',
+                        },
+                        envelope: {
+                            attack: 0.001,
+                            decay: 0.4,
+                            sustain: 0.01,
+                            release: 0.5,
+                            attackCurve: 'exponential',
+                        },
+                        "volume": -20,
+                    });
+                    var freeverb = new Tone.Freeverb().toMaster();
+                    freeverb.dampening.value = 1000;
+                    synth.connect(freeverb);
+                    // Connect lowpass filter to the kick
+                    synth.connect(new Tone.Filter(2000));
+                    synth.toMaster();
+                } else if (globalInstId == 0) {
+                    synth = new Tone.FMSynth({
+                        "harmonicity": 1,
+                        "modulationIndex": 3.5,
+                        "carrier": {
+                            "oscillator": {
+                                "instId": "custom",
+                                "partials": [0, 1, 0, 2]
+                            },
+                            "envelope": {
+                                "attack": 0.08,
+                                "decay": 0.3,
+                                "sustain": 0,
+                            },
+                        },
+                        "modulator": {
+                            "oscillator": {
+                                "instId": "square"
+                            },
+                            "envelope": {
+                                "attack": 0.1,
+                                "decay": 0.2,
+                                "sustain": 0.3,
+                                "release": 0.01
+                            },
+                        }
+                    }).toMaster();
+                }
+
+                var newStar = {
+                    params: {
+                        mag_2P: mag_2P,
+                        phase_2P: phase_2P,
+                        mag_estimate_2P: mag_estimate_2P,
+                        phase_estimate_2P: phase_estimate_2P,
+                        // minMag: 15,
+                        // maxMag: 20
+                        minMag: Math.min(...mag_estimate),
+                        maxMag: Math.max(...mag_estimate)
+                    },
+                    id: sourceId,
+                    lcIndex: 0,
+                    synth: synth,
+                    type: typeOfInsts[globalInstId],
+                    instId: globalInstId,
+                    vel: velocities[Math.floor(Math.random() * velocities.length)],
+                };
+                startPlayingStar(newStar);
+                selectedStars.push(newStar);
+                console.log('star:', newStar);
+
+                // Add to the DOM
+                var ulElt = document.getElementById('starsList');
+                var liElt = document.createElement('li');
+                var color = colors[globalInstId];
+                liElt.innerHTML = "<p style='color: " + color + ";display: inline-block;margin: 0'>" + typeOfInsts[globalInstId] + "</p>" + ' for source: ' + object.data.source_id;
+
+                ulElt.appendChild(liElt);
+
+                document.getElementById('textListStars').innerText = "List of stars playing:";
+                globalInstId++;
+                globalInstId = globalInstId % numInst;
+            }
+            else if (xhr.status !== 200) {
+                alert('Request failed.  Returned status of ' + xhr.status);
+            }
         }
-    };
     xhr.send();
-})
+    }
+});
+
+var shapesCache = {};
+var getShape = function(diam, r, g, b) {
+    var key = diam + '-' + r + '-' + g + '-' + b;
+
+    if ( shapesCache[key] === undefined ) {
+        var c = document.createElement('canvas');
+        c.width = c.height = diam;
+        var ctx = c.getContext('2d');
+        ctx.beginPath();
+        var color = 'rgb(' + r + ',' + g + ',' + b + ')';
+        ctx.fillStyle = color;
+        ctx.fillStyle = color;
+        ctx.arc(diam/2., diam/2., diam/2., 0, 2*Math.PI, true);
+        ctx.fill();
+
+        shapesCache[key] = c;
+    }
+
+    return shapesCache[key];
+};
+
 
 // define custom draw function
 var drawFunction = function (source, canvasCtx, viewParams) {
@@ -231,10 +261,19 @@ var drawFunction = function (source, canvasCtx, viewParams) {
         canvasCtx.stroke();
 
 };
+
+var drawAnimatedStar = function(canvas, progression) { // progression between 0 and 1
+
+};
+
+var pulsarDrawFunction = function(source, canvasCtx, viewParams) {
+    var diam = 14;
+    canvasCtx.drawImage(getShape(diam, 130, 30, 108), source.x-diam/2., source.y-diam/2.);
+};
 // load catalogue with positions of Gaia stars for which we have light curves
 // draw function is too slow for that many sources :(
 aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', { color: 'red', onClick: 'showTable' }));
-
+aladin.addCatalog(A.catalogFromVizieR('J/ApJ/804/23/pulsars', '0 +0', 180,  {shape: pulsarDrawFunction, onClick: 'showTable', name: 'Pulsars' }));
 //var synth = new Tone.DuoSynth();
 /*
 var synth = new Tone.FMSynth();
@@ -285,29 +324,37 @@ var synth = new Tone.Synth({
     "portamento" : 0.05
 })*/
 
+var playChords = false;
+document.getElementById('chordsControl').addEventListener('change', function (e) {
+    playChords = e.target.checked;
+    console.log(playChords);
+});
+
+
 var t = 0;
 var loop = new Tone.Loop(function (time) {
     for (var k = 0; k < selectedStars.length; k++) {
         var currentStar = selectedStars[k];
         var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
-	if (currentStar.type == 'melody') {
-		currentStar.lcIndex++;
-		currentStar.lcIndex = currentStar.lcIndex % 96;
-		var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
-		mesureIdx = Math.floor(mesureIdx / 4);
-		if (currentStar.lcIndex % 48 == 0) {
-		    piano.triggerAttackRelease(chordsArray[mesureIdx], '4m');
-		}
+        if (currentStar.type == 'melody') {
+            currentStar.lcIndex++;
+            currentStar.lcIndex = currentStar.lcIndex % 96;
+            var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
+            mesureIdx = Math.floor(mesureIdx / 4);
+            // play chords
+            if (playChords && currentStar.lcIndex % 48 == 0) {
+                piano.triggerAttackRelease(chordsArray[mesureIdx], '4m');
+            }
 
-		if (currentStar.lcIndex % 2 >= 0) currentStar.synth.triggerAttackRelease(note, '12n');		
-		console.log(note);
-	} else if (currentStar.type == 'kick') {
-	    //triggered at different notes
-	    if (t % currentStar.vel == 0) {
-            	currentStar.synth.triggerAttackRelease(note, '48n');
-	    }
-	}
+            if (currentStar.lcIndex % 2 >= 0) currentStar.synth.triggerAttackRelease(note, '12n');
+            console.log(note);
+        } else if (currentStar.type == 'kick') {
+            //triggered at different notes
+            if (t % currentStar.vel == 0) {
+                currentStar.synth.triggerAttackRelease(note, '48n');
+            }
+        }
     }
     //triggered every 48th mesure.
     //console.log(Tone.Transport.position);

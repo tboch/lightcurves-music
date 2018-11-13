@@ -28,10 +28,19 @@
         </div>
 
         <div class="col-5">
-	    <p id="textListStars">No stars playing</p>
+            <p id="textListStars">No stars playing</p>
             <div id="starsList"></div>
             <div id="lightcurve"></div>
-            <div id="controls">continuous play<br>play chords<br>animate plotly<br>animate stars<br>button "no mag normalisation"</br>drums</div>
+            <div id="controls">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chordsControl">
+                    <label class="form-check-label" for="chordsControl">
+                            Play chords progression
+                    </label>
+                </div>
+                <br>
+                continuous play<br>play chords<br>animate plotly<br>animate stars<br>button "no mag normalisation"</br>drums
+            </div>
         </div>
     </div>
 
@@ -50,4 +59,5 @@
     <script src="js/app.js"></script>
 
 </body>
+
 </html>

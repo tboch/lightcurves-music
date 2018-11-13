@@ -119,18 +119,101 @@ var drawFunction = function (source, canvasCtx, viewParams) {
 aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', { color: 'red', onClick: 'showTable' }));
 
 
-var notes = ['C3', 'D#3', 'F3', 'G3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G4', 'G#4', 'A#4', 'C5', 'D#5'];
-notes = ['A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4', 'A4']; // minor pentatonic
+var notes = ['C3', 'D#3', 'F3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G#4', 'A#4', 'C5', 'D#5'];
+//notes = ['A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4', 'A4']; // minor pentatonic
+//notes = ['C3', 'C3#', 'D3', 'D3#', 'E3', 'F3', 'F3#', 'G3', 'G3#', 'A3', 'A3#', 'B3', 'C4', 'C4#', 'D4', 'D4#', 'E4', 'F4', 'F4#', 'G4', 'G4#', 'A4', 'A4#', 'B4'];
+notes = ['C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5'];
+var chordsArray = [['F3', 'A3', 'D4'], ['B3', 'D4', 'G4'], ['C3', 'E3', 'A3'], ['A3', 'C4', 'F4']]; // veridis quo
+chordsArray = [['G3', 'C4', 'E4'], ['A3', 'C4', 'E4'], ['F3', 'A3', 'C4', 'E4'], ['G3', 'A3', 'C4', 'F4']]; // 
+//chordsArray = [['A3', 'C3', 'E4'], ['G3', 'B3', 'D4'], ['F3', 'A3', 'C4'], ['D3', 'F3', 'A3']];  // kavinsky
+
 // Tone JS
 Tone.Transport.bpm.value = 300;
-var synth = new Tone.Synth().toMaster();
+//var synth = new Tone.DuoSynth();
+
+var synth = new Tone.FMSynth();
+synth.set({
+    'envelope':
+    {
+        attack: 0.005,
+        decay: 0.3,
+        sustain: 0.3,
+        release: 0.1
+    }
+});
+
+synth = new Tone.PluckSynth();
+
+var synth = new Tone.MonoSynth({
+    "oscillator": {
+        "type": "square8"
+    },
+    "envelope": {
+        "attack": 0.05,
+        "decay": 0.3,
+        "sustain": 0.4,
+        "release": 0.8,
+    },
+    "filterEnvelope": {
+        "attack": 0.001,
+        "decay": 0.7,
+        "sustain": 0.1,
+        "release": 0.8,
+        "baseFrequency": 300,
+        "octaves": 4
+    }
+});
+
+var synth = new Tone.FMSynth({
+    "harmonicity": 1,
+    "modulationIndex": 3.5,
+    "carrier": {
+        "oscillator": {
+            "type": "custom",
+            "partials": [0, 1, 0, 2]
+        },
+        "envelope": {
+            "attack": 0.08,
+            "decay": 0.3,
+            "sustain": 0,
+        },
+    },
+    "modulator": {
+        "oscillator": {
+            "type": "square"
+        },
+        "envelope": {
+            "attack": 0.1,
+            "decay": 0.2,
+            "sustain": 0.3,
+            "release": 0.01
+        },
+    }
+})
+
+synth.toMaster();
+
 var piano = new Tone.PolySynth(4, Tone.Synth, {
-    "volume": -1,
+    "volume": -2,
     "oscillator": {
         "partials": [1, 2, 5],
     },
     "portamento": 0.005
-}).toMaster();
+});
+var piano = new Tone.PolySynth(3, Tone.Synth, {
+    "volume": -10,
+    "spread": 30,
+    "envelope": {
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.5,
+        "release": 0.4,
+        "attackCurve": "exponential"
+    },
+});
+piano.toMaster();
+
+
 var loop = new Tone.Loop(function (time) {
 
     Tone.Draw.schedule(function () {
@@ -156,15 +239,19 @@ var loop = new Tone.Loop(function (time) {
 
     for (var k = 0; k < selectedStars.length; k++) {
         var currentStar = selectedStars[k];
-        if (currentStar.lcIndex % 12 == 0) {
-            //piano.triggerAttackRelease(['C3', 'E3', 'A3'], '1n');
-        }
+
         var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
 
-        piano.triggerAttackRelease(note, '24n');
+        var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
+        mesureIdx = Math.floor(mesureIdx / 4);
+        if (currentStar.lcIndex % 48 == 0) {
+            piano.triggerAttackRelease(chordsArray[mesureIdx], '4m');
+        }
+
+        if (currentStar.lcIndex % 2 == 0) synth.triggerAttackRelease(note, '6n');
     }
-    //triggered every 48th mesure. 
+    //triggered every 48th mesure.
     //console.log(Tone.Transport.position);
 }, "12n").start(0);
 Tone.Transport.start();

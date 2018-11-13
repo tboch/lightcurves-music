@@ -26,7 +26,9 @@ var startPlayingStar = function (star) {
         }
     ];
     Plotly.newPlot('lightcurve', d, {
-        yaxis: { autorange: "reversed" },
+        yaxis: { autorange: "reversed", title: 'G mag' },
+        xaxis: { title: 'phase' },
+
         showlegend: false,
     });
 };
@@ -74,6 +76,8 @@ aladin.on('objectClicked', function (object) {
                     phase_2P: phase_2P,
                     mag_estimate_2P: mag_estimate_2P,
                     phase_estimate_2P: phase_estimate_2P,
+                    // minMag: 15,
+                    // maxMag: 20
                     minMag: Math.min(...mag_estimate),
                     maxMag: Math.max(...mag_estimate)
                 },
@@ -190,6 +194,22 @@ var synth = new Tone.FMSynth({
         },
     }
 })
+/*
+var synth = new Tone.Synth({
+    "oscillator" : {
+        "type" : "amtriangle",
+        "harmonicity" : 0.5,
+        "modulationType" : "sine"
+    },
+    "envelope" : {
+        "attackCurve" : 'exponential',
+        "attack" : 0.05,
+        "decay" : 0.2,
+        "sustain" : 0.2,
+        "release" : 1.5,
+    },
+    "portamento" : 0.05
+})*/
 
 synth.toMaster();
 
@@ -249,7 +269,7 @@ var loop = new Tone.Loop(function (time) {
             piano.triggerAttackRelease(chordsArray[mesureIdx], '4m');
         }
 
-        if (currentStar.lcIndex % 2 == 0) synth.triggerAttackRelease(note, '6n');
+        if (currentStar.lcIndex % 2 >= 0) synth.triggerAttackRelease(note, '24n');
     }
     //triggered every 48th mesure.
     //console.log(Tone.Transport.position);

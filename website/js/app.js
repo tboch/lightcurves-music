@@ -1,3 +1,7 @@
+Plotly.newPlot('lightcurve', [], {
+   yaxis: { autorange: "reversed" },
+   showlegend: false, 
+});
 var startPlayingStar = function (star) {
     if (! star.params) {
         return;
@@ -25,10 +29,7 @@ var startPlayingStar = function (star) {
             marker: { color: '#7EE1F7', size: 8 }
         }
     ];
-    Plotly.newPlot('lightcurve', d, {
-    	yaxis: { autorange: "reversed" },
-   	showlegend: false, 
-    });
+    Plotly.addTraces('lightcurve', d)
 };
 
 // initialize Aladin Lite
@@ -72,11 +73,7 @@ aladin.on('objectClicked', function (object) {
     		lcIndex: 0,
 	    };
             startPlayingStar(newStar);
-	    if (selectedStars.length == 0) {
-	        selectedStars.push(newStar);
-	    } else {
-		selectedStars[0] = newStar;
-	    }
+	    selectedStars.push(newStar);
             console.log('star:', newStar);
         }
         else if (xhr.status !== 200) {
@@ -112,7 +109,7 @@ var loop = new Tone.Loop(function (time) {
             	marker: { color: '#7EE1F7', size: 8 }
 	    }
 	    Plotly.deleteTraces('lightcurve', 3*i + 2);
-    	    Plotly.addTraces('lightcurve', update, 3*i+2);
+    	    Plotly.addTraces('lightcurve', update, 3*i + 2);
 	}
     }, time) //use AudioContext time of the event
     //synth.triggerAttack('C4', '+0.05');

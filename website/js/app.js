@@ -34,7 +34,7 @@ piano.toMaster();
 // Tone JS
 Tone.Transport.bpm.value = 300;
 
-var velocities = [16, 24, 32];
+var velocities = [8, 8, 16];
 
 // number of instruments and their colors
 var numInst = 2;
@@ -47,7 +47,7 @@ var colors = ['green', 'red'];
 // - add here more instruments
 // Cycles when all instruments have already been added one time
 var globalInstId = 0;
-var typeOfInsts = ['melody', 'kick'];
+var typeOfInsts = ['melody', 'conga'];
 Plotly.newPlot('lightcurve', [], {
     yaxis: { autorange: "reversed", title: 'G mag' },
     xaxis: { title: 'phase' },
@@ -79,7 +79,7 @@ var startPlayingStar = function (star) {
             x: [params.phase_estimate_2P[star.lcIndex]],
             y: [params.mag_estimate_2P[star.lcIndex]],
             mode: 'markers',
-            marker: { color: '#7EE1F7', size: 8 }
+            marker: { color: color, size: 8 }
         },
     ];
     Plotly.addTraces('lightcurve', d);
@@ -159,13 +159,22 @@ aladin.on('objectClicked', function (object) {
                             release: 0.5,
                             attackCurve: 'exponential',
                         },
-                        "volume": -20,
+                        "volume": -10,
                     });
-                    var freeverb = new Tone.Freeverb().toMaster();
-                    freeverb.dampening.value = 1000;
-                    synth.connect(freeverb);
+		    synth = new Tone.MembraneSynth({
+			"pitchDecay" : 0.008,
+			"octaves" : 2,
+			"envelope" : {
+				"attack" : 0.0006,
+				"decay" : 0.5,
+				"sustain" : 0
+			}
+		    }).toMaster();
                     // Connect lowpass filter to the kick
-                    synth.connect(new Tone.Filter(2000));
+                    synth.connect(new Tone.Filter(500));
+                    var freeverb = new Tone.Freeverb().toMaster();
+                    freeverb.dampening.value = 100;
+                    synth.connect(freeverb);
                     synth.toMaster();
                 } else if (globalInstId == 0) {
                     synth = new Tone.FMSynth({
@@ -386,7 +395,8 @@ var loop = new Tone.Loop(function (time) {
             }
 
             if (currentStar.lcIndex % 2 >= 0) currentStar.synth.triggerAttackRelease(note, '12n');
-        } else if (currentStar.type == 'kick') {
+            console.log(note);
+        } else if (currentStar.type == 'conga') {
             //triggered at different notes
             if (t % currentStar.vel == 0) {
                 currentStar.synth.triggerAttackRelease(note, '48n');

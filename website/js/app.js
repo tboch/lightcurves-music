@@ -27,7 +27,7 @@ var startPlayingStar = function (star) {
     ];
     Plotly.newPlot('lightcurve', d, {
     	yaxis: { autorange: "reversed" },
-   	showLegend: false, 
+   	showlegend: false, 
     });
 };
 

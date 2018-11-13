@@ -63,12 +63,12 @@ var startPlayingStar = function (star) {
             mode: 'markers',
             marker: { color: color, size: 8 }
         },
-        /*{
+        {
             x: [params.phase_estimate_2P[star.lcIndex]],
             y: [params.mag_estimate_2P[star.lcIndex]],
             mode: 'markers',
             marker: { color: '#7EE1F7', size: 8 }
-        }*/
+        },
     ];
     Plotly.addTraces('lightcurve', d);
 };
@@ -330,16 +330,42 @@ document.getElementById('chordsControl').addEventListener('change', function (e)
     console.log(playChords);
 });
 
-
 var t = 0;
 var loop = new Tone.Loop(function (time) {
     for (var k = 0; k < selectedStars.length; k++) {
-        var currentStar = selectedStars[k];
-        var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
+        var currentStar = selectedStars[k]; 
+        
+        currentStar.lcIndex++;
+        currentStar.lcIndex = currentStar.lcIndex % 96;
+   	var idTrace = k*3 + 2;
+ 
+        var color = colors[currentStar.instId];
+    	Plotly.animate('lightcurve', {
+    		data: [{
+            		x: [currentStar.params.phase_estimate_2P[currentStar.lcIndex]],
+            		y: [currentStar.params.mag_estimate_2P[currentStar.lcIndex]],
+            		mode: 'markers',
+            		marker: { color: color, size: 13 }
+		      }], 
+    		traces: [idTrace],
+    		layout: {}
+  	},
+	{
+    		transition: {
+      			duration: 0,
+    		},
+	  	frame: {
+		  	duration: 0,
+			redraw: false,
+	  	}
+	});
+    }
+    for (var k = 0; k < selectedStars.length; k++) {
+        var currentStar = selectedStars[k]; 
+
+	var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
         if (currentStar.type == 'melody') {
-            currentStar.lcIndex++;
-            currentStar.lcIndex = currentStar.lcIndex % 96;
             var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
             mesureIdx = Math.floor(mesureIdx / 4);
             // play chords

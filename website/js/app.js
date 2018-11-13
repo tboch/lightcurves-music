@@ -94,6 +94,11 @@ aladin.on('objectClicked', function (object) {
     console.log('click', object);
     if (object == null) {
         Tone.Transport.stop();
+        for (var k=0; k<selectedStars.length; k++) {
+            var s = selectedStars[k].ref;
+            s.starRef = undefined;
+            s.catalog.reportChange();
+        }
         selectedStars = [];
         Plotly.newPlot('lightcurve', [], {
             yaxis: { autorange: "reversed" },
@@ -372,6 +377,7 @@ var loop = new Tone.Loop(function (time) {
 	var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
         if (currentStar.type == 'melody') {
+            currentStar.ref.catalog.reportChange();
             var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
             mesureIdx = Math.floor(mesureIdx / 4);
             // play chords

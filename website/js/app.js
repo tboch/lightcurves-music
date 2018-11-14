@@ -144,6 +144,7 @@ aladin.on('objectClicked', function (object) {
                 var phase_2P = data.phase.concat(data.phase.map(function (x) { return 1 + x; }));
 
                 var synth;
+		var vel; 
                 if (globalInstId == 1) {
 		    synth = new Tone.MembraneSynth({
 			"pitchDecay" : 0.008,
@@ -153,13 +154,14 @@ aladin.on('objectClicked', function (object) {
 				"decay" : 0.5,
 				"sustain" : 0
 			}
-		    }).toMaster();
+		    });
                     // Connect lowpass filter to the kick
                     synth.connect(new Tone.Filter(500));
                     var freeverb = new Tone.Freeverb().toMaster();
                     freeverb.dampening.value = 100;
                     synth.connect(freeverb);
                     synth.toMaster();
+                    vel = velocities[Math.floor(Math.random() * velocities.length)];
                 } else if (globalInstId == 0) {
                     synth = new Tone.FMSynth({
                         "harmonicity": 1,
@@ -188,19 +190,26 @@ aladin.on('objectClicked', function (object) {
                             },
                         }
                     }).toMaster();
+                    vel = velocities[Math.floor(Math.random() * velocities.length)];
 		} else if(globalInstId == 2) {
 			synth = new Tone.MembraneSynth({
-				"pitchDecay" : 0.01,
-				"octaves" : 6,
-				"oscillator" : {
-					"type" : "square4"
-				},
+				"volume": "+10",
+				"pitchDecay" : 0.008,
+				"octaves" : 2,
 				"envelope" : {
-					"attack" : 0.001,
-					"decay" : 0.2,
-					"sustain" : 0
+					"attack" : 0.01,
+					"decay" : 1,
+					"sustain" : 0,
 				}
-			}).toMaster();
+		    	});
+                    	// Connect lowpass filter to the kick
+
+                    	vel = 12;
+                    // Connect lowpass filter to the kick
+                    var freeverb = new Tone.Freeverb().toMaster();
+                    freeverb.dampening.value = 100;
+                    synth.connect(freeverb);
+                    synth.toMaster();
 		}
 
                 var newStar = {
@@ -219,7 +228,7 @@ aladin.on('objectClicked', function (object) {
                     synth: synth,
                     type: typeOfInsts[globalInstId],
                     instId: globalInstId,
-                    vel: velocities[Math.floor(Math.random() * velocities.length)],
+                    vel: vel,
                 };
                 object.starRef = newStar;
                 newStar.ref = object;
@@ -350,8 +359,8 @@ var loop = new Tone.Loop(function (time) {
             }
         } else if (currentStar.type == 'kick') {
             //triggered at different notes
-            if ((t + 4) % currentStar.vel == 0) {
-                currentStar.synth.triggerAttack(note, '48n');
+            if (t % currentStar.vel == 0) {
+                currentStar.synth.triggerAttackRelease(note, '48n');
             }
         } 
     }

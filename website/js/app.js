@@ -9,8 +9,6 @@ for (var k = 0; k<30; k++) {
     image.src = 'pics/star-frames/f' + k + '.png';
 }
 
-
-
 var notes = ['C3', 'D#3', 'F3', 'G#3', 'A#3', 'C4', 'D#4', 'F4', 'G#4', 'A#4', 'C5', 'D#5'];
 //notes = ['A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4', 'G4', 'A4']; // minor pentatonic
 //notes = ['C3', 'C3#', 'D3', 'D3#', 'E3', 'F3', 'F3#', 'G3', 'G3#', 'A3', 'A3#', 'B3', 'C4', 'C4#', 'D4', 'D4#', 'E4', 'F4', 'F4#', 'G4', 'G4#', 'A4', 'A4#', 'B4'];
@@ -34,11 +32,11 @@ piano.toMaster();
 // Tone JS
 Tone.Transport.bpm.value = 300;
 
-var velocities = [8, 8, 16];
+var velocities = [8, 8, 8];
 
 // number of instruments and their colors
-var numInst = 2;
-var colors = ['green', 'red'];
+var numInst = 3;
+var colors = ['green', 'red', 'purple'];
 
 // Describes the list of instruments which will be played
 // In order :
@@ -47,7 +45,7 @@ var colors = ['green', 'red'];
 // - add here more instruments
 // Cycles when all instruments have already been added one time
 var globalInstId = 0;
-var typeOfInsts = ['melody', 'conga'];
+var typeOfInsts = ['melody', 'conga', 'kick'];
 Plotly.newPlot('lightcurve', [], {
     yaxis: { autorange: "reversed", title: 'G mag' },
     xaxis: { title: 'phase' },
@@ -100,11 +98,12 @@ aladin.on('objectClicked', function (object) {
             s.catalog.reportChange();
         }
         selectedStars = [];
-        Plotly.newPlot('lightcurve', [], {
-            yaxis: { autorange: "reversed", title: 'G mag' },
-            xaxis: { title: 'phase' },
-            showlegend: false,
-        });
+	Plotly.newPlot('lightcurve', [], {
+	    yaxis: { autorange: "reversed", title: 'G mag' },
+	    xaxis: { title: 'phase' },
+
+	    showlegend: false,
+	});
         globalInstId = 0;
         var ulElt = document.getElementById('starsList');
         while (ulElt.hasChildNodes()) {
@@ -146,27 +145,11 @@ aladin.on('objectClicked', function (object) {
 
                 var synth;
                 if (globalInstId == 1) {
-                    // Kick
-                    synth = new Tone.MembraneSynth({
-                        pitchDecay: 0.05,
-                        octaves: 8,
-                        oscillator: {
-                            type: 'sine',
-                        },
-                        envelope: {
-                            attack: 0.001,
-                            decay: 0.4,
-                            sustain: 0.01,
-                            release: 0.5,
-                            attackCurve: 'exponential',
-                        },
-                        "volume": -10,
-                    });
 		    synth = new Tone.MembraneSynth({
 			"pitchDecay" : 0.008,
 			"octaves" : 2,
 			"envelope" : {
-				"attack" : 0.0006,
+				"attack" : 0.01,
 				"decay" : 0.5,
 				"sustain" : 0
 			}
@@ -180,6 +163,7 @@ aladin.on('objectClicked', function (object) {
                 } else if (globalInstId == 0) {
                     synth = new Tone.FMSynth({
                         "harmonicity": 1,
+			"volume": -5,
                         "modulationIndex": 3.5,
                         "carrier": {
                             "oscillator": {
@@ -204,7 +188,20 @@ aladin.on('objectClicked', function (object) {
                             },
                         }
                     }).toMaster();
-                }
+		} else if(globalInstId == 2) {
+			synth = new Tone.MembraneSynth({
+				"pitchDecay" : 0.01,
+				"octaves" : 6,
+				"oscillator" : {
+					"type" : "square4"
+				},
+				"envelope" : {
+					"attack" : 0.001,
+					"decay" : 0.2,
+					"sustain" : 0
+				}
+			}).toMaster();
+		}
 
                 var newStar = {
                     params: {
@@ -296,55 +293,6 @@ var pulsarDrawFunction = function (source, canvasCtx, viewParams) {
 // draw function is too slow for that many sources :(
 aladin.addCatalog(A.catalogFromURL('http://cds.unistra.fr/~boch/adass2018-hackathon/gaia-variable-sample.vot', { shape: starDrawFunction, onClick: 'showTable' }));
 aladin.addCatalog(A.catalogFromVizieR('J/ApJ/804/23/pulsars', '0 +0', 180, { shape: pulsarDrawFunction, onClick: 'showTable', name: 'Pulsars' }));
-//var synth = new Tone.DuoSynth();
-/*
-var synth = new Tone.FMSynth();
-synth.set({
-    'envelope':
-    {
-        attack: 0.005,
-        decay: 0.3,
-        sustain: 0.3,
-        release: 0.1
-    }
-});
-
-synth = new Tone.PluckSynth();
-
-var synth = new Tone.MonoSynth({
-    "oscillator": {
-        "instId": "square8"
-    },
-    "envelope": {
-        "attack": 0.05,
-        "decay": 0.3,
-        "sustain": 0.4,
-        "release": 0.8,
-    },
-    "filterEnvelope": {
-        "attack": 0.001,
-        "decay": 0.7,
-        "sustain": 0.1,
-        "release": 0.8,
-        "baseFrequency": 300,
-        "octaves": 4
-    }
-});
-var synth = new Tone.Synth({
-    "oscillator" : {
-        "instId" : "amtriangle",
-        "harmonicity" : 0.5,
-        "modulationType" : "sine"
-    },
-    "envelope" : {
-        "attackCurve" : 'exponential',
-        "attack" : 0.05,
-        "decay" : 0.2,
-        "sustain" : 0.2,
-        "release" : 1.5,
-    },
-    "portamento" : 0.05
-})*/
 
 var playChords = false;
 document.getElementById('chordsControl').addEventListener('change', function (e) {
@@ -386,7 +334,7 @@ var loop = new Tone.Loop(function (time) {
 	var noteIdx = Math.floor((notes.length - 1) * (currentStar.params.mag_estimate_2P[currentStar.lcIndex] - currentStar.params.minMag) / (currentStar.params.maxMag - currentStar.params.minMag));
         var note = notes[notes.length - 1 - noteIdx];
         if (currentStar.type == 'melody') {
-            currentStar.ref.catalog.reportChange();
+            //currentStar.ref.catalog.reportChange();
             var mesureIdx = parseInt(Tone.Transport.position.split(':')[0]) % 16;
             mesureIdx = Math.floor(mesureIdx / 4);
             // play chords
@@ -395,13 +343,17 @@ var loop = new Tone.Loop(function (time) {
             }
 
             if (currentStar.lcIndex % 2 >= 0) currentStar.synth.triggerAttackRelease(note, '12n');
-            console.log(note);
         } else if (currentStar.type == 'conga') {
             //triggered at different notes
             if (t % currentStar.vel == 0) {
                 currentStar.synth.triggerAttackRelease(note, '48n');
             }
-        }
+        } else if (currentStar.type == 'kick') {
+            //triggered at different notes
+            if ((t + 4) % currentStar.vel == 0) {
+                currentStar.synth.triggerAttack(note, '48n');
+            }
+        } 
     }
     //triggered every 48th mesure.
     //console.log(Tone.Transport.position);

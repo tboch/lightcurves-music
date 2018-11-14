@@ -290,7 +290,7 @@ var drawAnimatedStar = function (source, canvasCtx, idx) { // progression betwee
 
 var pulsarDrawFunction = function (source, canvasCtx, viewParams) {
     var diam = 14;
-    canvasCtx.drawImage(getShape(diam, 130, 30, 108), source.x - diam / 2., source.y - diam / 2.);
+    canvasCtx.drawImage(getShape(diam, 56, 124, 234), source.x - diam / 2., source.y - diam / 2.);
 };
 // load catalogue with positions of Gaia stars for which we have light curves
 // draw function is too slow for that many sources :(

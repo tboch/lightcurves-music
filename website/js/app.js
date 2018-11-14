@@ -1,6 +1,6 @@
 // load all frames to animate stars
 var starAnimationFrames = [];
-for (var k = 0; k<=30; k++) {
+for (var k = 0; k<30; k++) {
     var image = new Image();
     image.idx = k;
     image.onload = function () {
@@ -101,7 +101,8 @@ aladin.on('objectClicked', function (object) {
         }
         selectedStars = [];
         Plotly.newPlot('lightcurve', [], {
-            yaxis: { autorange: "reversed" },
+            yaxis: { autorange: "reversed", title: 'G mag' },
+            xaxis: { title: 'phase' },
             showlegend: false,
         });
         globalInstId = 0;
@@ -224,7 +225,7 @@ aladin.on('objectClicked', function (object) {
                 var ulElt = document.getElementById('starsList');
                 var liElt = document.createElement('li');
                 var color = colors[globalInstId];
-                liElt.innerHTML = "<p style='color: " + color + ";display: inline-block;margin: 0'>" + typeOfInsts[globalInstId] + "</p>" + ' for source: ' + object.data.source_id;
+                liElt.innerHTML = "<p style='color: " + color + ";display: inline-block;margin: 0'>" + typeOfInsts[globalInstId] + "</>" + ' for source: ' + object.data.source_id;
 
                 ulElt.appendChild(liElt);
 
@@ -358,8 +359,7 @@ var loop = new Tone.Loop(function (time) {
             		mode: 'markers',
             		marker: { color: color, size: 13 }
 		      }], 
-    		traces: [idTrace],
-    		layout: {}
+    		traces: [idTrace]
   	},
 	{
     		transition: {

@@ -35,7 +35,7 @@ Tone.Transport.bpm.value = 300;
 var velocities = [8, 8, 8];
 
 // number of instruments and their colors
-var numInst = 3;
+var numInst = 2;
 var colors = ['green', 'red', 'purple'];
 
 // Describes the list of instruments which will be played
